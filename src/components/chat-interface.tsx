@@ -4,6 +4,10 @@ import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import { ArrowLeft, Send, Loader2, Bot } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
+import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
+import { oneDark } from "react-syntax-highlighter/dist/esm/styles/prism";
 
 
 interface Message {
@@ -158,7 +162,32 @@ export function ChatInterface({ bot, conversation, initialMessages }: ChatInterf
                     : "text-gray-900 px-1 py-1"
                     }`}
                 >
-                  <p className="whitespace-pre-wrap leading-relaxed">{message.content || "..."}</p>
+                  <div className="prose prose-sm max-w-none dark:prose-invert">
+                    <ReactMarkdown
+                      remarkPlugins={[remarkGfm]}
+                      components={{
+                        code({ node, inline, className, children, ...props }: any) {
+                          const match = /language-(\w+)/.exec(className || "");
+                          return !inline && match ? (
+                            <SyntaxHighlighter
+                              style={oneDark}
+                              language={match[1]}
+                              PreTag="div"
+                              {...props}
+                            >
+                              {String(children).replace(/\n$/, "")}
+                            </SyntaxHighlighter>
+                          ) : (
+                            <code className={className} {...props}>
+                              {children}
+                            </code>
+                          );
+                        },
+                      }}
+                    >
+                      {message.content || "..."}
+                    </ReactMarkdown>
+                  </div>
                 </div>
               </div>
             ))}

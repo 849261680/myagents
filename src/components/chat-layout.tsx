@@ -19,6 +19,10 @@ import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select } from "@/components/ui/select";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
+import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
+import { oneDark } from "react-syntax-highlighter/dist/esm/styles/prism";
 
 const ALL_MODELS = [
   // OpenAI
@@ -613,9 +617,32 @@ export function ChatLayout({ bots: initialBots, user }: ChatLayoutProps) {
                           : "text-gray-900 px-1 py-1"
                           }`}
                       >
-                        <p className="whitespace-pre-wrap leading-relaxed">
-                          {message.content || "..."}
-                        </p>
+                        <div className="prose prose-sm max-w-none dark:prose-invert">
+                          <ReactMarkdown
+                            remarkPlugins={[remarkGfm]}
+                            components={{
+                              code({ node, inline, className, children, ...props }: any) {
+                                const match = /language-(\w+)/.exec(className || "");
+                                return !inline && match ? (
+                                  <SyntaxHighlighter
+                                    style={oneDark}
+                                    language={match[1]}
+                                    PreTag="div"
+                                    {...props}
+                                  >
+                                    {String(children).replace(/\n$/, "")}
+                                  </SyntaxHighlighter>
+                                ) : (
+                                  <code className={className} {...props}>
+                                    {children}
+                                  </code>
+                                );
+                              },
+                            }}
+                          >
+                            {message.content || "..."}
+                          </ReactMarkdown>
+                        </div>
                       </div>
                     </div>
                   ))}
@@ -838,11 +865,10 @@ export function ChatLayout({ bots: initialBots, user }: ChatLayoutProps) {
                   className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-gray-50 transition-colors text-left"
                 >
                   <div
-                    className={`w-5 h-5 rounded border flex items-center justify-center shrink-0 transition-colors ${
-                      enabledModels.includes(model.value)
-                        ? "bg-black border-black"
-                        : "border-gray-300"
-                    }`}
+                    className={`w-5 h-5 rounded border flex items-center justify-center shrink-0 transition-colors ${enabledModels.includes(model.value)
+                      ? "bg-black border-black"
+                      : "border-gray-300"
+                      }`}
                   >
                     {enabledModels.includes(model.value) && (
                       <Check className="h-3.5 w-3.5 text-white" />
